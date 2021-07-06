@@ -5,3 +5,4 @@
 /resources/memories/*.gif
 *.pyc
 .env
+!.gitkeep
