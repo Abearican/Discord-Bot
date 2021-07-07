@@ -46,6 +46,8 @@ class Events(commands.Cog):
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Please include required arguments\nFor help use `.help [command]`.')
+        else:
+            print(error)
 
 
 def setup(client):

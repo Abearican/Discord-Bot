@@ -1,4 +1,6 @@
+/data/*
 /logs/*
+/abandoned/*
 /resources/memories/*.png
 /resources/memories/*.jpg
 /resources/memories/*.jpeg
