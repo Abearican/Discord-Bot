@@ -5,6 +5,8 @@ import errno
 import datetime as dt
 import time
 
+BOT_CHANNELS = [803372255777914911, 803375064816287814, 803380541230940161]
+
 
 class Events(commands.Cog):
 
@@ -28,32 +30,18 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
 
-        log_message(message)
-
-        if message.author == self.client.user:
+        if message.author == self.client.user \
+                or message.channel.id in BOT_CHANNELS:
             return
 
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        # This will apply to any server the bot is in
-        print(f'{member} has joined a server!')
+        log_message(message)
 
-    @commands.Cog.listener()
-    async def on_member_remove(self, member):
-        print(f'{member} has left a server!')  # Ditto
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send('Please include required arguments\nFor help use `.help [command]`.')
-        else:
-            print(error)
-
-
-def setup(client):
-    client.add_cog(Events(client))
-    print(f'Loaded {os.path.basename(__file__)} successfully')
-
+    # @commands.Cog.listener()
+    # async def on_command_error(self, ctx, error):
+    #     if isinstance(error, commands.MissingRequiredArgument):
+    #         await ctx.send('Please include required arguments\nFor help use `.help [command]`.')
+    #     else:
+    #         print(error)
 
 # Logs all messages to the logs file in bot directory
 def log_message(message):
@@ -78,3 +66,9 @@ def log_message(message):
 
     chat_log.write(f'{current_time} [#{channel}] {username}: {user_message}\n')
     chat_log.close()
+
+def setup(client):
+    client.add_cog(Events(client))
+    print(f'Loaded {os.path.basename(__file__)} successfully')
+
+

@@ -22,6 +22,3 @@ for filename in os.listdir('./cogs'):
             print(e)
 
 client.run(TOKEN)
-
-
-#

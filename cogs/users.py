@@ -4,98 +4,131 @@ import json
 import os
 import math
 
-from pymongo.periodic_executor import _register_executor
-
 
 class User_Info(commands.Cog):
     def __init__(self, ctx):
         self.ctx = ctx
 
-    @commands.command()
-    async def pay(self, ctx, recipient: discord.Member, amount: int):
-        users = self.load_json()
-        payee = None
-        rec = None
-
-        for user in users['users']:
-            if ctx.author.id == user['id']:
-                payee = user
-            if recipient.id == user['id']:
-                rec = user
-
-        if not payee:
-            await ctx.send(f'You are not registered yet! Registering user now...')
-            self.register_user(ctx.author)
-        if not rec:
-            await ctx.send(f'{recipient.display_name} is not registered yet! Registering user now...')
-            self.register_user(recipient)
-        if not payee or not rec:
-            return
-
-        if(payee['money'] < amount):
-            await ctx.send(f'Broke bitch! :joy::joy::joy: You don\'t have enough Shrimp :joy: (Balance: `₷{payee["money"]}`)')
-        elif(amount < 0):
-            fine_amount = math.ceil(payee['money']/5)
-            payee['money'] -= fine_amount
-            await ctx.send(f'Stop thief!\n`You were caught and had to pay a fine of ₷{fine_amount}`')
-            self.save_json(users)
-        else:
-            payee['money'] -= amount
-            rec['money'] += amount
-            await ctx.send(f'₷{amount} payed to {recipient.display_name}!')
-            self.save_json(users)
-
-    @commands.command(aliases=['bal'])
-    async def balance(self, ctx, user: discord.Member = None):
-        users = self.load_json()
-        if not user:
-            user = ctx.author
-        for u in users['users']:
-            if u['id'] == user.id:
-                await ctx.send(f'The balance for {user.mention} is `₷{u["money"]}`')
-                return
-        self.register_user(user)
-
     @commands.command(aliases=['reg'])
     async def register(self, ctx, user: discord.Member = None):
-        users = self.load_json()
         if not user:
             user = ctx.author
-        for userid in users['users']:
-            if userid['id'] == user.id:
-                await ctx.send(f'{user.name} is already registered!')
-                return
-        self.register_user(user)
-        await ctx.send("New user registered! *(Hopefully)*")
 
-    def register_user(self, user):
-        users = self.load_json()
-        new_user = {
-            'id': user.id,
-            'name': user.name,
-            'xp': 0,
-            'money': 69
-        }
-        users['users'].append(new_user)
+        if is_registered(user):
+            await ctx.send(f'{user.name} is already registered!')
+        else:
+            register_user(user)
+            await ctx.send("New user registered!")
 
-        self.save_json(users)
+    @commands.command()
+    async def pay(self, ctx, amount: int, recipient: discord.Member):
+        payee = ctx.author
 
-    def save_json(self, new_data):
-        with open('./data/userdata.json', 'w', encoding='utf-8') as json_file:
-            json.dump(new_data, json_file, indent=2)
+        if not is_registered(payee):
+            register_user(payee)
+        if not is_registered(recipient):
+            register_user(recipient)
 
-    def load_json(self):
-        with open('./data/userdata.json', 'r', encoding='utf-8') as json_file:
-            return json.load(json_file)
+        if(user_money(payee) < amount):
+            await ctx.send(f'Broke bitch! :joy::joy::joy: You don\'t have enough Shrimp :joy: (Balance: `₷{user_money(payee)}`)')
+        elif(amount < 0):
+            fine_amount = math.ceil(user_money(payee)/5)
+            take_money(payee, fine_amount)
+            await ctx.send(f'Stop thief!\n`You were caught and had to pay a fine of ₷{fine_amount}`')
+        else:
+            take_money(payee, amount)
+            give_money(recipient, amount)
+            await ctx.send(f'₷{amount} payed to {recipient.display_name}!')
+
+
+def user_level(user):
+    return get_user_object(user)['level']
+
+
+def user_xp(user: discord.Member):
+    return get_user_object(user)['xp']
+
+
+def user_money(user: discord.Member):
+    return get_user_object(user)['money']
+
+
+def give_xp(user, amount):
+    users = load_json()
+    user_obj = get_user_object(user, users)
+    user_obj['xp'] += amount
+    user_obj['name'] = user.display_name
+    save_json(users)
+
+
+def give_money(user: discord.Member, amount):
+    users = load_json()
+    user_obj = get_user_object(user, users)
+    user_obj['money'] += amount
+    save_json(users)
+
+
+def take_money(user: discord.Member, amount):
+    users = load_json()
+    user_obj = get_user_object(user, users)
+    user_obj['money'] -= amount
+    save_json(users)
+
+
+def verify_display_name(user: discord.Member):
+    user_obj = get_user_object(user)
+    if not user_obj['name'] == user.display_name:
+        users = load_json(user)
+        user_obj = get_user_object(user, users)
+        user_obj['name'] = user.display_name
+        save_json(users)
+
+
+def register_user(user):
+    users = load_json()
+    new_user = {
+        'id': user.id,
+        'name': user.display_name,
+        'username': user.name,
+        'level': 1,
+        'xp': 100,
+        'money': 69
+    }
+    users.append(new_user)
+
+    save_json(users)
+
+
+def is_registered(user: discord.Member):
+    users = load_json()
+    for user_obj in users:
+        if user_obj['id'] == user.id:
+            return True
+    return False
+
+
+def get_user_object(user: discord.Member, users=None):
+    if not users:
+        users = load_json()
+    for u in users:
+        if user.id == u['id']:
+            return u
+
+    # Register user if the function could not find a matching user object, then try again
+    register_user(user)
+    get_user_object(user)
+
+
+def save_json(new_data):
+    with open('./data/userdata.json', 'w', encoding='utf-8') as json_file:
+        json.dump(new_data, json_file, indent=2)
+
+
+def load_json():
+    with open('./data/userdata.json', 'r', encoding='utf-8') as json_file:
+        return json.load(json_file)
 
 
 def setup(client):
     client.add_cog(User_Info(client))
     print(f'Loaded {os.path.basename(__file__)} successfully')
-
-# "users": [
-    # {
-    #     "id": "4206942069",
-    #     "name": "Test User",
-    #     "xp": 420,
-    #     "money": 69
