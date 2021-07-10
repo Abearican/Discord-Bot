@@ -2,7 +2,7 @@
 
 
 payouts = {
-    "chat": 20,    # Money rewarded per chat message
+    "chat": 20,    # XP rewarded per chat message
     "trivia": 15   # Money rewarded for correct trivia answers
 }
 
