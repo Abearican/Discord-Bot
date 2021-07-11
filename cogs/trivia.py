@@ -30,10 +30,10 @@ class Trivia(commands.Cog):
     @commands.command(aliases=['q', 'question'])
     @commands.cooldown(1, 43200, commands.BucketType.guild)
     async def trivia(self, ctx):
-        # if not ctx.channel == self.trivia_channel:
-        #     await ctx.send(f"{ctx.author.mention}, try again in {self.trivia_channel.mention}!")
-        #     self.trivia.reset_cooldown(ctx)
-        #     return
+        if not ctx.channel == self.trivia_channel:
+            await ctx.send(f"{ctx.author.mention}, try again in {self.trivia_channel.mention}!")
+            self.trivia.reset_cooldown(ctx)
+            return
 
         await self.play_trivia(ctx)
 
@@ -71,7 +71,6 @@ class Trivia(commands.Cog):
                         embed.add_field(
                             name=f'{user.display_name}', value=f'Trivia Score: {users.trivia_score(user)}', inline=False)
                         await signup.edit(embed=embed)
-                        print(f'{user.display_name} appended')
                 else:
                     print("Unknown reaction")
 
