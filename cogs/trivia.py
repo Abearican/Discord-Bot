@@ -10,6 +10,7 @@ import settings
 TRIVIA_PATH = settings.paths['trivia']
 TRIVIA_PAY = settings.payouts['trivia_money']
 TRIVIA_CHANNEL = settings.channels['trivia']
+TRIVIA_ROUNDS = settings.other['trivia_rounds']
 
 
 class Trivia(commands.Cog):
@@ -35,7 +36,7 @@ class Trivia(commands.Cog):
         #     return
 
         await self.play_trivia(ctx)
-    
+
     @trivia.error
     async def trivia_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
@@ -44,12 +45,13 @@ class Trivia(commands.Cog):
         else:
             print(error)
 
-    async def play_trivia(self, ctx):
+    async def trivia_signup(self, ctx):
         def check_not_bot(reaction, user):
             return not user.bot
 
-        enough_players = False
-        embed = discord.Embed(title="@here Trivia Signup in progress!")
+        embed = discord.Embed(title="Trivia Signup in progress!")
+        embed.set_thumbnail(
+            url='https://www.nicepng.com/png/full/232-2328543_trivia-icon.png')
         embed.add_field(name='Players:',
                         value="(Press the ballot box reaction to join.)")
         signup = await ctx.send(embed=embed)
@@ -62,22 +64,40 @@ class Trivia(commands.Cog):
                 await signup.remove_reaction(reaction, user)
 
                 if reaction.emoji == '🗳️':
-                    active_players.append(user)
-                    embed.add_field(
-                        name=f'{user.display_name}', value='Trivia Score: WIP', inline=False)
-                    await signup.edit(embed=embed)
-                    await ctx.send('appended')
+                    if user in active_players:
+                        await ctx.send(f'{user.mention}, you have already signed up!')
+                    else:
+                        active_players.append(user)
+                        embed.add_field(
+                            name=f'{user.display_name}', value=f'Trivia Score: {users.trivia_score(user)}', inline=False)
+                        await signup.edit(embed=embed)
+                        print(f'{user.display_name} appended')
                 else:
                     print("Unknown reaction")
 
             except asyncio.TimeoutError:
-                await ctx.send(
-                    "Time has run out! Lets calculate some bullshit now...")
+                await ctx.send("Trivia signup is closed!")
                 break
 
-        for x in range(5):
+        return active_players
+
+    async def play_trivia(self, ctx):
+        players = await self.trivia_signup(ctx)
+        if len(players) < 1:
+            await ctx.send("Not enough players signed up! Game not started.")
+            self.trivia.reset_cooldown(ctx)
+            return
+
+        scores = []
+        for player in players:
+            scores.append({
+                "player": player,
+                "score": 0
+            })
+
+        for x in range(TRIVIA_ROUNDS):
             question = load_question()
-            embed = discord.Embed(title='Trivia Question')
+            embed = discord.Embed(title=f'Trivia Question {x+1}')
 
             embed.add_field(name='Question:',
                             value=question['question'], inline=False)
@@ -95,45 +115,69 @@ class Trivia(commands.Cog):
             for emoji in emojis:
                 await msg.add_reaction(emoji=emoji)
 
-            answers = []
+            def check_not_bot(reaction, user):
+                return not user.bot
 
-            timeout = 60    # Initial time to wait for response, to allow enough time to read question and think
+            answers = []
+            timeout = 30    # Initial time to wait for response, to allow enough time to read question and think
             while True:
                 try:
                     reaction, user = await self.client.wait_for("reaction_add", timeout=timeout, check=check_not_bot)
                     await msg.remove_reaction(reaction, user)
 
-                    if reaction.emoji in emojis:
-                        letter_answers = ['A', 'B', 'C', 'D']
-                        answer = {
-                            "user": user,
-                            "answer": letter_answers[emojis.index(reaction.emoji)]
-                        }
-                        answered = False
-                        for a in answers:
-                            if answer['user'] == a['user']:
-                                await ctx.send(f"Sorry, {a['user'].mention}! You cannot change your answer after submitting.")
-                                answered = True
-                                break
+                    if user in players:
+                        if reaction.emoji in emojis:
+                            letter_answers = ['A', 'B', 'C', 'D']
+                            answer = {
+                                "user": user,
+                                "answer": letter_answers[emojis.index(reaction.emoji)]
+                            }
+                            answered = False
+                            for a in answers:
+                                if answer['user'] == a['user']:
+                                    await ctx.send(f"Sorry, {a['user'].mention}! You cannot change your answer after submitting.")
+                                    answered = True
+                                    break
 
-                        if not answered:
-                            answers.append(answer)
-                            timeout = 30  # Time to wait for response from others
+                            if not answered:
+                                if check_answer(question, answer['answer']):
+                                    users.give_trivia_points(user, 1)
+                                    for score in scores:
+                                        if score['player'] == user:
+                                            score['score'] += 1
 
+                                answers.append(answer)
+                                timeout = 15  # Time to wait for response from others
+
+                        else:
+                            print("Unknown reaction")
                     else:
-                        print("Unknown reaction")
+                        await ctx.send(f'{user.mention}, you did not sign up for this round of trivia!')
 
                 except asyncio.TimeoutError:
-                    await ctx.send(
-                        "Time has run out! Lets calculate some bullshit now...")
+                    if x < TRIVIA_ROUNDS - 1:
+                        await ctx.send(
+                            "Time has run out! On to the next question!")
+                    else:
+                        await ctx.send("Time has run out! That was the last question. Totalling answers now...")
 
                     for answer in answers:
                         print(
                             f'{answer["user"].display_name} : {answer["answer"]}')
-                    print('\n\n')
-                    await check_answers(ctx, question, answers)
+                    print()
                     break
 
+        embed = discord.Embed(title="Results")
+
+        hiscores = sorted(
+            scores, key=lambda x: x['score'], reverse=True)
+
+        for score in hiscores:
+            embed.add_field(
+                name=score['player'].display_name, value=f'{score["score"]} points')
+        embed.set_thumbnail(
+            url='https://www.nicepng.com/png/full/232-2328543_trivia-icon.png')
+        await ctx.send(embed=embed)
 
 
 def load_question():
@@ -142,8 +186,9 @@ def load_question():
     return random.choice(questions)
 
 
-async def check_answers(question, answer):
-    pass
+def check_answer(question, answer):
+    return question["answer"] == answer
+
 
 def setup(client):
     client.add_cog(Trivia(client))

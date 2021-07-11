@@ -53,11 +53,22 @@ def user_money(user: discord.Member):
     return get_user_object(user)['money']
 
 
+def trivia_score(user: discord.Member):
+    return get_user_object(user)['trivia_score']
+
+
 def give_xp(user, amount):
     users = load_json()
     user_obj = get_user_object(user, users)
     user_obj['xp'] += amount
     user_obj['name'] = user.display_name
+    save_json(users)
+
+
+def give_trivia_points(user: discord.Member, score):
+    users = load_json()
+    user_obj = get_user_object(user, users)
+    user_obj['trivia_score'] += score
     save_json(users)
 
 
@@ -84,7 +95,7 @@ def verify_display_name(user: discord.Member):
         save_json(users)
 
 
-def register_user(user):
+def register_user(user: discord.Member):
     users = load_json()
     new_user = {
         'id': user.id,
@@ -92,7 +103,8 @@ def register_user(user):
         'username': user.name,
         'level': 1,
         'xp': 100,
-        'money': 69
+        'money': 69,
+        "trivia_score": 0
     }
     users.append(new_user)
 
@@ -119,7 +131,7 @@ def get_user_object(user: discord.Member, users=None):
     get_user_object(user)
 
 
-def save_json(new_data):
+def save_json(new_data: list):
     with open('./data/userdata.json', 'w', encoding='utf-8') as json_file:
         json.dump(new_data, json_file, indent=2)
 

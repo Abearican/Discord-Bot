@@ -22,3 +22,7 @@ channels = {    # Channel for the corresponding extension/context to remain in (
     "trivia": 863164248607424523,
     "gambling": 863276584730361887
 }
+
+other = {
+    "trivia_rounds": 5
+}
