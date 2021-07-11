@@ -12,7 +12,7 @@ import settings
 # 5*(lvl**2) + 50*lvl + 100
 
 # amount of xp to be gained from chat messages
-CHAT_XP = settings.payouts['chat']
+CHAT_XP = settings.payouts['chat_xp']
 
 
 class Leveling(commands.Cog):
