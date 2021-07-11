@@ -83,10 +83,10 @@ class Trivia(commands.Cog):
 
     async def play_trivia(self, ctx):
         players = await self.trivia_signup(ctx)
-        if len(players) < 1:
-            await ctx.send("Not enough players signed up! Game not started.")
-            self.trivia.reset_cooldown(ctx)
-            return
+        # if len(players) < 3:
+        #     await ctx.send("Not enough players signed up! Game not started.")
+        #     self.trivia.reset_cooldown(ctx)
+        #     return
 
         scores = []
         for player in players:
@@ -172,9 +172,27 @@ class Trivia(commands.Cog):
         hiscores = sorted(
             scores, key=lambda x: x['score'], reverse=True)
 
-        for score in hiscores:
+        for index, score in enumerate(hiscores):
+            if score == hiscores[0]:
+                winnings = 50
+            elif score == hiscores[1]:
+                if score['score'] == hiscores[0]['score']:
+                    winnings = 50
+                else:
+                    winnings = 35
+            elif score == hiscores[2]:
+                if score['score'] == hiscores[1]['score']:
+                    winnings = 35
+                elif score['score'] == hiscores[0]['score']:
+                    winnings = 50
+                else:
+                    winnings = 20
+            else:
+                winnings = 0
+
             embed.add_field(
-                name=score['player'].display_name, value=f'{score["score"]} points')
+                name=f"{index + 1}. {score['player'].display_name}", value=f'{score["score"]} points\nWinnings: ₷{winnings}')
+
         embed.set_thumbnail(
             url='https://www.nicepng.com/png/full/232-2328543_trivia-icon.png')
         await ctx.send(embed=embed)
