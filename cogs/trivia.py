@@ -83,10 +83,10 @@ class Trivia(commands.Cog):
 
     async def play_trivia(self, ctx):
         players = await self.trivia_signup(ctx)
-        # if len(players) < 3:
-        #     await ctx.send("Not enough players signed up! Game not started.")
-        #     self.trivia.reset_cooldown(ctx)
-        #     return
+        if len(players) < 3:
+            await ctx.send("Not enough players signed up! Game not started.")
+            self.trivia.reset_cooldown(ctx)
+            return
 
         scores = []
         for player in players:
@@ -192,6 +192,7 @@ class Trivia(commands.Cog):
 
             embed.add_field(
                 name=f"{index + 1}. {score['player'].display_name}", value=f'{score["score"]} points\nWinnings: ₷{winnings}')
+            users.give_money(score['player'], winnings)
 
         embed.set_thumbnail(
             url='https://www.nicepng.com/png/full/232-2328543_trivia-icon.png')
