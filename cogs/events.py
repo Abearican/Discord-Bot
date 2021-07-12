@@ -46,6 +46,9 @@ class Events(commands.Cog):
             return
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Please include required arguments\nFor help use `.help [command]`.')
+        if isinstance(error, commands.CommandOnCooldown):
+            time_left = (error.retry_after)/60/60
+            await ctx.send(f'This command is on cooldown, you can use it in {round(time_left, 1)} hours!')
         else:
             print('Ignoring exception in command {}:'.format(
                 ctx.command), file=sys.stderr)

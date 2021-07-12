@@ -6,44 +6,30 @@ import os
 import asyncio
 import cogs.users as users
 import settings
+import math
 
 TRIVIA_PATH = settings.paths['trivia']
-TRIVIA_PAY = settings.payouts['trivia_money']
-TRIVIA_CHANNEL = settings.channels['trivia']
-TRIVIA_ROUNDS = settings.other['trivia_rounds']
-
-# random code
+TRIVIA_CHANNEL_ID = settings.channels['trivia']
+TRIVIA_PAY = settings.trivia['trivia_pay']
+TRIVIA_ROUNDS = settings.trivia['trivia_rounds']
+ROUND_TIME = settings.trivia['round_time']
 
 
 class Trivia(commands.Cog):
     def __init__(self, client):
         self.client = client
-        self.trivia_channel = client.get_channel(TRIVIA_CHANNEL)
-
-    # @commands.has_role('Robot Overlords')
-    # async def triviaquestion(self, ctx):
-    #     channel = self.client.get_channel(TRIVIA_CHANNEL)
-    #     if ctx.channel == channel:
-    #         await self.trivia()
-    #     else:
-    #         await ctx.send(f"Try again in {channel.mention}.")
 
     # @tasks.loop(hours=2)
     @commands.command(aliases=['q', 'question'])
     @commands.cooldown(1, 43200, commands.BucketType.guild)
     async def trivia(self, ctx):
-        if not ctx.channel == self.trivia_channel:
-            await ctx.send(f"{ctx.author.mention}, try again in {self.trivia_channel.mention}!")
+        trivia_channel = self.client.get_channel(TRIVIA_CHANNEL_ID)
+        if not ctx.channel == trivia_channel:
+            await ctx.send(f"{ctx.author.mention}, try again in {trivia_channel.mention}!")
             self.trivia.reset_cooldown(ctx)
             return
 
         await self.play_trivia(ctx)
-
-    @trivia.error
-    async def trivia_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            time_left = (error.retry_after)/60/60
-            await ctx.send(f'This command is on cooldown, you can use it in {round(time_left, 1)} hours!')
 
     async def trivia_signup(self, ctx):
         def check_not_bot(reaction, user):
@@ -118,7 +104,8 @@ class Trivia(commands.Cog):
                 return not user.bot
 
             answers = []
-            timeout = 30    # Initial time to wait for response, to allow enough time to read question and think
+            # Initial time to wait for response, to allow enough time to read question and think
+            timeout = ROUND_TIME
             while True:
                 try:
                     reaction, user = await self.client.wait_for("reaction_add", timeout=timeout, check=check_not_bot)
@@ -146,7 +133,8 @@ class Trivia(commands.Cog):
                                             score['score'] += 1
 
                                 answers.append(answer)
-                                timeout = 15  # Time to wait for response from others
+                                # Time to wait for response from others
+                                timeout = math.floor(ROUND_TIME/2)
 
                         else:
                             print("Unknown reaction")
@@ -166,36 +154,44 @@ class Trivia(commands.Cog):
                     print()
                     break
 
-        embed = discord.Embed(title="Results")
-
         hiscores = sorted(
             scores, key=lambda x: x['score'], reverse=True)
+        await score_game(ctx, hiscores)
 
-        for index, score in enumerate(hiscores):
-            if score == hiscores[0]:
-                winnings = 50
-            elif score == hiscores[1]:
-                if score['score'] == hiscores[0]['score']:
-                    winnings = 50
-                else:
-                    winnings = 35
-            elif score == hiscores[2]:
-                if score['score'] == hiscores[1]['score']:
-                    winnings = 35
-                elif score['score'] == hiscores[0]['score']:
-                    winnings = 50
-                else:
-                    winnings = 20
-            else:
-                winnings = 0
 
-            embed.add_field(
-                name=f"{index + 1}. {score['player'].display_name}", value=f'{score["score"]} points\nWinnings: ₷{winnings}')
-            users.give_money(score['player'], winnings)
+async def score_game(ctx, hiscores):
+    embed = discord.Embed(title="Results")
+    for index, score in enumerate(hiscores):
+        # Setting initial value according to its placement in the list
+        score['placement'] = index + 1
 
-        embed.set_thumbnail(
-            url='https://www.nicepng.com/png/full/232-2328543_trivia-icon.png')
-        await ctx.send(embed=embed)
+        # If the score is the same as the previous one, the placements will be the same
+        if not index == 0:
+            prev = hiscores[index-1]
+            if score['score'] == prev['score']:
+                score['placement'] = prev['placement']
+
+        # Dish out winnings based on placement
+        placement = score['placement']
+        player = score['player']
+
+        if placement == 1:
+            winnings = TRIVIA_PAY[0]
+        elif placement == 2:
+            winnings = TRIVIA_PAY[1]
+        elif placement == 3:
+            winnings = TRIVIA_PAY[2]
+        else:
+            winnings = 0
+
+        users.give_money(player, winnings)
+
+        embed.add_field(
+            name=f"{placement}. {player.display_name}", value=f'Score: {score["score"]}\nWinnings: ₷{winnings}')
+
+    embed.set_thumbnail(
+        url='https://www.nicepng.com/png/full/232-2328543_trivia-icon.png')
+    await ctx.send(embed=embed)
 
 
 def load_question():
