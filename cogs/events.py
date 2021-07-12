@@ -42,6 +42,8 @@ class Events(commands.Cog):
     async def on_command_error(self, ctx, error):
         if hasattr(ctx.command, 'on_error'):
             return
+        if isinstance(error, commands.CommandNotFound):
+            return
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Please include required arguments\nFor help use `.help [command]`.')
         else:
