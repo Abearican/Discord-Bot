@@ -12,6 +12,8 @@ TRIVIA_PAY = settings.payouts['trivia_money']
 TRIVIA_CHANNEL = settings.channels['trivia']
 TRIVIA_ROUNDS = settings.other['trivia_rounds']
 
+# random code
+
 
 class Trivia(commands.Cog):
     def __init__(self, client):
