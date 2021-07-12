@@ -24,8 +24,8 @@ channels = {
 trivia = {
     # Money rewarded for 1st, 2nd, and 3rd in trivia game
     "trivia_pay": [50, 35, 20],
-    "trivia_rounds": 2,
-    "round_time": 5
+    "trivia_rounds": 5,
+    "round_time": 20
 }
 
 payouts = {
