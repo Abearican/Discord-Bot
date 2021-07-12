@@ -44,8 +44,6 @@ class Trivia(commands.Cog):
         if isinstance(error, commands.CommandOnCooldown):
             time_left = (error.retry_after)/60/60
             await ctx.send(f'This command is on cooldown, you can use it in {round(time_left, 1)} hours!')
-        else:
-            print(error)
 
     async def trivia_signup(self, ctx):
         def check_not_bot(reaction, user):

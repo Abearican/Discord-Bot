@@ -4,6 +4,8 @@ import os
 import errno
 import datetime as dt
 import time
+import sys
+import traceback
 
 BOT_CHANNELS = [803372255777914911, 803375064816287814, 803380541230940161]
 
@@ -36,14 +38,21 @@ class Events(commands.Cog):
 
         log_message(message)
 
-    # @commands.Cog.listener()
-    # async def on_command_error(self, ctx, error):
-    #     if isinstance(error, commands.MissingRequiredArgument):
-    #         await ctx.send('Please include required arguments\nFor help use `.help [command]`.')
-    #     else:
-    #         print(error)
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        if hasattr(ctx.command, 'on_error'):
+            return
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send('Please include required arguments\nFor help use `.help [command]`.')
+        else:
+            print('Ignoring exception in command {}:'.format(
+                ctx.command), file=sys.stderr)
+            traceback.print_exception(
+                type(error), error, error.__traceback__, file=sys.stderr)
 
 # Logs all messages to the logs file in bot directory
+
+
 def log_message(message):
     username = str(message.author).split('#')[0]
     user_message = str(message.content).replace('\n', '\n\t\t ')
@@ -67,8 +76,7 @@ def log_message(message):
     chat_log.write(f'{current_time} [#{channel}] {username}: {user_message}\n')
     chat_log.close()
 
+
 def setup(client):
     client.add_cog(Events(client))
     print(f'Loaded {os.path.basename(__file__)} successfully')
-
-
