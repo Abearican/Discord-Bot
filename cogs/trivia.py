@@ -19,6 +19,11 @@ class Trivia(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def trivia_night(self, ctx):
+        await self.trivia(ctx)
+
     # @tasks.loop(hours=2)
     @commands.command(aliases=['q', 'question'])
     @commands.cooldown(1, 43200, commands.BucketType.guild)
@@ -207,29 +212,3 @@ def check_answer(question, answer):
 def setup(client):
     client.add_cog(Trivia(client))
     print(f'Loaded {os.path.basename(__file__)} successfully')
-
-    # correct_users = []
-    # for answer in answers:
-    #     if answer['answer'] == question['answer']:
-    #         correct_users.append(answer['user'])
-
-    # correct_string = ''
-
-    # if len(correct_users) == 0:
-    #     await ctx.send("Nobody got the answer right!")
-    # if len(correct_users) == 1:
-    #     await ctx.send(f'{correct_users[0].display_name} was the only person to answer correctly and receive ₷{TRIVIA_PAY}!')
-    #     users.give_money(correct_users[0], TRIVIA_PAY)
-    # if len(correct_users) == 2:
-    #     await ctx.send(f'{correct_users[0].display_name} and {correct_users[1].display_name} got the answer correct and received ₷{TRIVIA_PAY}!')
-    #     users.give_money(correct_users[0], TRIVIA_PAY)
-    #     users.give_money(correct_users[1], TRIVIA_PAY)
-    # if len(correct_users) > 2:
-    #     for user in correct_users:
-    #         if user == correct_users[-1]:
-    #             correct_string += f'and {user.display_name}'
-    #         else:
-    #             correct_string += f'{user.display_name}, '
-    #         users.give_money(user, TRIVIA_PAY)
-    #     correct_string += f' got the answer correct and received ₷{TRIVIA_PAY}!'
-    #     await ctx.send(correct_string)
