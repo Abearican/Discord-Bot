@@ -131,6 +131,12 @@ def get_user_object(user: discord.Member, users=None):
     get_user_object(user)
 
 
+def sort_users(query='xp'):
+    users = load_json()
+    users.sort(key=lambda x: x[query], reverse=True)
+    save_json(users)
+
+
 def save_json(new_data: list):
     with open('./data/userdata.json', 'w', encoding='utf-8') as json_file:
         json.dump(new_data, json_file, indent=2)

@@ -4,6 +4,7 @@ import os
 import cogs.users as users
 import asyncio
 import random as rand
+from time import sleep
 
 
 class Gambling(commands.Cog):
@@ -16,6 +17,11 @@ class Gambling(commands.Cog):
         if bet > users.user_money(ctx.author):
             await ctx.send("You are a broke bitch lol try betting a lower amount.")
             return
+        if bet < 0:
+            await ctx.send("Fuck off.")
+            return
+        if bet == 0:
+            await ctx.send('₷0? Fine. We will play your stupid little game. *gOoD lUcK* 🙄')
 
         msg = await ctx.send(f'You wish to bet ₷{bet}. Confirm?')
         emojis = ['👍', '👎']
@@ -39,31 +45,38 @@ class Gambling(commands.Cog):
                             bet += bet
 
                         await ctx.send('Very well. I will role some dice...')
+                        users.take_money(user, bet)
+                        sleep(2)
 
                         dice = [rand.randint(1, 6), rand.randint(1, 6)]
-                        await ctx.send(f'[{dice[0]}] and [{dice[1]}]\nThat totals to {dice[0]+dice[1]}.')
+                        await ctx.send(f'`Rolls: [{dice[0]}] & [{dice[1]}]`\nThat totals to `{dice[0]+dice[1]}`.')
+                        sleep(3)
 
                         if dice[0]+dice[1] == 7 or dice[0]+dice[1] == 11:
                             await ctx.send(f'Tough luck, {user.display_name}. I\'ll be takin\' ya money, mate!')
                             await ctx.send(f'`You lost ₷{bet}.`')
-                            users.take_money(user, bet)
                             break
                         else:
                             exclames = ['Good stuff! ',
                                         'Sheeeeeesh! ',
                                         'It\' your lucky day! ',
                                         'Are you trying to take all my money? ',
-                                        'Alright! ']
-                            retry = await ctx.send(f'{rand.choice(exclames)} What do you say? Double or nothing?\nCurrent bet: ₷{bet}\tCash out: ₷{bet+bet}')
+                                        'Alright! ',
+                                        'Listen here you lucky little shit...']
+
+                            await ctx.send(f'{rand.choice(exclames)}\n`You won ₷{bet*2}!`')
+                            users.give_money(user, bet*2)
+                            sleep(2)
+
+                            retry = await ctx.send(f'What do you say? Double or nothing?\n`Bet ₷{bet*2}?`')
+
                             for emoji in emojis:
                                 await retry.add_reaction(emoji)
 
                             played = True
                     else:
                         if played:
-                            await ctx.send('As you wish.')
-                            await ctx.send(f'`Cashing out ₷{bet+bet}`')
-                            users.give_money(user, bet)
+                            await ctx.send('Play again soon!')
                         else:
                             await ctx.send('Well run the command again and bet the correct amount this time. Sheesh.')
                         break

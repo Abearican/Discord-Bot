@@ -30,5 +30,5 @@ trivia = {
 
 payouts = {
     # XP rewarded per chat message (this will be reworked later)
-    "chat_xp": 20,
+    "chat_xp": 5,
 }

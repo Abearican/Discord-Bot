@@ -71,23 +71,27 @@ class Leveling(commands.Cog):
         if query.lower() != 'money':
             query = 'xp'
 
+        uinfo.sort_users()
         users = uinfo.load_json()
-        sorted_users = sorted(
-            users, key=lambda x: x[query], reverse=True)
 
         embed = discord.Embed(title='Leaderboard')
-        rank = 1
 
-        for u in sorted_users:
+        for u in users:
             user = self.client.get_user(u['id'])
-            if rank <= 10:
+            if user_rank(user) <= 10:
                 if query == 'xp':
                     embed.add_field(
-                        name=f'{rank}. {u["name"]} (Level {user_level(user)})', value=f'{u[query]} XP', inline=False)
+                        name=f'{user_rank(user)}. {u["name"]} (Level {user_level(user)})',
+                        value=f'{u[query]} XP',
+                        inline=False)
                 if query == 'money':
                     embed.add_field(
-                        name=f'{rank}. {user.display_name} (Level {user_level(user)})', value=f'₷{u[query]}', inline=False)
-            rank += 1
+                        name=f'{user_rank(user)}. {u["name"]} (Level {user_level(user)})',
+                        value=f'₷{u[query]}',
+                        inline=False)
+            else:
+                break
+
         embed.set_thumbnail(url=self.client.get_user(
             860712144537911306).avatar_url)
         await ctx.send(embed=embed)
@@ -123,8 +127,8 @@ def user_level(user):
 
 
 def user_rank(user):
+    uinfo.sort_users()
     users = uinfo.load_json()
-    users.sort(key=lambda x: x['xp'], reverse=True)
     user_obj = uinfo.get_user_object(user, users)
 
     return users.index(user_obj)+1
