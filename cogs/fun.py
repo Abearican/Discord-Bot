@@ -4,7 +4,7 @@ import os
 import random
 
 
-class Games(commands.Cog):
+class Fun(commands.Cog):
     def __init__(self, client):
         self.client = client
 
@@ -93,7 +93,6 @@ class Games(commands.Cog):
             await ctx.send(file=discord.File('./resources/tails.png'))
 
     ### Draw random card (non duplicate!) ###
-
     @commands.command(aliases=['drawcard'])
     async def draw(self, ctx, amount=1):
         faces = ['Ace', '2', '3', '4', '5', '6', '7',
@@ -125,5 +124,5 @@ class Games(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(Games(client))
+    client.add_cog(Fun(client))
     print(f'Loaded {os.path.basename(__file__)} successfully')
