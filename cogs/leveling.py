@@ -41,7 +41,7 @@ class Leveling(commands.Cog):
         embed.add_field(
             name='Level', value=f'{user_level(user)}', inline=True)
         embed.add_field(
-            name='Rank', value=f'WIP', inline=True)
+            name='Rank', value=f'{user_rank(user)}', inline=True)
         embed.add_field(
             name='Total XP', value=f'{uinfo.user_xp(user)}', inline=True)
 
@@ -120,6 +120,14 @@ def user_level(user):
             remaining_xp -= lvl_up_func(lvl)
             lvl += 1
     return lvl
+
+
+def user_rank(user):
+    users = uinfo.load_json()
+    users.sort(key=lambda x: x['xp'], reverse=True)
+    user_obj = uinfo.get_user_object(user, users)
+
+    return users.index(user_obj)+1
 
 
 def xp_til_level(user):
