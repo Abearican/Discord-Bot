@@ -68,29 +68,39 @@ class Leveling(commands.Cog):
 
     @commands.command(aliases=['top', 'hiscores'])
     async def leaderboard(self, ctx, query='xp'):
-        if query.lower() != 'money':
-            query = 'xp'
+        acceptable_queries = ['xp', 'money', 'trivia']
+        query = query.lower()
 
-        uinfo.sort_users()
+        if not query in acceptable_queries:
+            await ctx.send(f"'{query}' is not an accepted sort query.\n`Accepted sort queries: {acceptable_queries}`")
+            return
+
+        embed = discord.Embed(title=f'Leaderboard ({query})')
+
+        if query == 'trivia':
+            query = 'trivia_score'
+
+        uinfo.sort_users(query)
         users = uinfo.load_json()
 
-        embed = discord.Embed(title='Leaderboard')
-
         for u in users:
-            user = self.client.get_user(u['id'])
-            if user_rank(user) <= 10:
+            user = self.client.get_user(u["id"])
+            if user_rank(user, query) <= 10:
                 if query == 'xp':
                     embed.add_field(
-                        name=f'{user_rank(user)}. {u["name"]} (Level {user_level(user)})',
+                        name=f'{user_rank(user, query)}. {u["name"]} (Level {user_level(user)})',
                         value=f'{u[query]} XP',
                         inline=False)
                 if query == 'money':
                     embed.add_field(
-                        name=f'{user_rank(user)}. {u["name"]} (Level {user_level(user)})',
+                        name=f'{user_rank(user, query)}. {u["name"]} (Level {user_level(user)})',
                         value=f'₷{u[query]}',
                         inline=False)
-            else:
-                break
+                if query == 'trivia_score':
+                    embed.add_field(
+                        name=f'{user_rank(user, query)}. {u["name"]} (Level {user_level(user)})',
+                        value=f'Score: {u[query]}',
+                        inline=False)
 
         embed.set_thumbnail(url=self.client.get_user(
             860712144537911306).avatar_url)
@@ -126,8 +136,8 @@ def user_level(user):
     return lvl
 
 
-def user_rank(user):
-    uinfo.sort_users()
+def user_rank(user, query='xp'):
+    uinfo.sort_users(query)
     users = uinfo.load_json()
     user_obj = uinfo.get_user_object(user, users)
 
