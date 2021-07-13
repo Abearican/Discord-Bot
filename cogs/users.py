@@ -5,11 +5,11 @@ import os
 import math
 
 
-class User_Info(commands.Cog):
+class Users(commands.Cog):
     def __init__(self, ctx):
         self.ctx = ctx
 
-    @commands.command(aliases=['reg'])
+    @commands.command(aliases=['reg'], hidden=True)
     async def register(self, ctx, user: discord.Member = None):
         if not user:
             user = ctx.author
@@ -20,7 +20,7 @@ class User_Info(commands.Cog):
             register_user(user)
             await ctx.send("New user registered!")
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def pay(self, ctx, amount: int, recipient: discord.Member):
         payee = ctx.author
 
@@ -41,7 +41,7 @@ class User_Info(commands.Cog):
             await ctx.send(f'₷{amount} payed to {recipient.display_name}!')
 
 
-def user_level(user):
+def user_level(user: discord.Member):
     return get_user_object(user)['level']
 
 
@@ -57,7 +57,7 @@ def trivia_score(user: discord.Member):
     return get_user_object(user)['trivia_score']
 
 
-def give_xp(user, amount):
+def give_xp(user: discord.Member, amount):
     users = load_json()
     user_obj = get_user_object(user, users)
     user_obj['xp'] += amount
@@ -148,5 +148,5 @@ def load_json():
 
 
 def setup(client):
-    client.add_cog(User_Info(client))
+    client.add_cog(Users(client))
     print(f'Loaded {os.path.basename(__file__)} successfully')
