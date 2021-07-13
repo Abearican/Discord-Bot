@@ -26,7 +26,7 @@ class Trivia(commands.Cog):
 
     # @tasks.loop(hours=2)
     @commands.command(aliases=['q', 'question'])
-    @commands.cooldown(1, 43200, commands.BucketType.guild)
+    @commands.cooldown(1, 21600, commands.BucketType.guild)
     async def trivia(self, ctx):
         trivia_channel = self.client.get_channel(TRIVIA_CHANNEL_ID)
         if not ctx.channel == trivia_channel:
@@ -192,7 +192,7 @@ async def score_game(ctx, hiscores):
         users.give_money(player, winnings)
 
         embed.add_field(
-            name=f"{placement}. {player.display_name}", value=f'Score: {score["score"]}\nWinnings: ₷{winnings}')
+            name=f"{placement}. {player.display_name}", value=f'Score: {score["score"]}\nWinnings: ₷{winnings}', inline=False)
 
     embed.set_thumbnail(
         url='https://www.nicepng.com/png/full/232-2328543_trivia-icon.png')
