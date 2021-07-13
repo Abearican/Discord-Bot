@@ -2,11 +2,10 @@ import discord
 from discord.ext import commands
 import os
 import cogs.users as uinfo
-import json
 import math
 import settings
 
-# Remaining XP til next level formula (Yoinked from Mee6 github docs bere:
+# Remaining XP til next level formula (Yoinked from Mee6 docs bere:
 #                        https://github.com/Mee6/Mee6-documentation/blob/master/docs/levels_xp.md )
 # 5lvl² + 50lvl + 100
 # 5*(lvl**2) + 50*lvl + 100
