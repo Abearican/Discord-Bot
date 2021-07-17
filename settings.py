@@ -23,9 +23,11 @@ channels = {
 
 trivia = {
     # Money rewarded for 1st, 2nd, and 3rd in trivia game
-    "trivia_pay": [50, 35, 20],
+    "trivia_pay": [100, 50, 25],
     "trivia_rounds": 5,
-    "round_time": 20
+    "round_time": 20,
+    # Amount of players required for trivia game to start
+    "player_requirement": 3
 }
 
 payouts = {

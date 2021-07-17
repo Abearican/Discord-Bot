@@ -34,7 +34,7 @@ class Admin(commands.Cog):
         await ctx.send(f'`{extension}` loaded successfully!')
 
     ### UNLOAD EXTENSIONS WITHIN DISCORD ###
-    @commands.command(aliases=['ul'])
+    @commands.command(aliases=['u'])
     @commands.has_role('Robot Overlords')
     async def unload(self, ctx, extension):
         await ctx.send(f'Unloading `{extension}`...')
@@ -47,7 +47,7 @@ class Admin(commands.Cog):
         await ctx.send(f'`{extension}` unloaded successfully!')
 
     ### RELOAD EXTENSIONS WITHIN DISCORD ###
-    @commands.command(aliases=['rl'])
+    @commands.command(aliases=['r'])
     @commands.has_role('Robot Overlords')
     async def reload(self, ctx, extension):
         await ctx.send(f'Attempting to reload `{extension}`...')

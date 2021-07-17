@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 import os
 import cogs.users as users
@@ -12,13 +11,16 @@ class Gambling(commands.Cog):
         self.client = client
 
     @commands.command(aliases=['711'])
-    async def seveneleven(self, ctx, bet: int):
+    @commands.cooldown(1, 21600, commands.BucketType.guild)
+    async def seveneleven(self, ctx, bet: int = 50):
 
         if bet > users.user_money(ctx.author):
             await ctx.send("You are a broke bitch lol try betting a lower amount.")
+            self.seveneleven.reset_cooldown(ctx)
             return
         if bet < 0:
             await ctx.send("Fuck off.")
+            self.seveneleven.reset_cooldown(ctx)
             return
         if bet == 0:
             await ctx.send('₷0? Fine. We will play your stupid little game. *gOoD lUcK* 🙄')
@@ -88,6 +90,11 @@ class Gambling(commands.Cog):
                     "If you are going to play the game, play the game. Fee not refunded for wasting my time.")
                 users.take_money(ctx.author, bet)
                 break
+        self.seveneleven.reset_cooldown(ctx)
+
+    @commands.command()
+    async def blackjack(self, ctx, bet):
+        pass
 
 
 def setup(client):
